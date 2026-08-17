@@ -84,31 +84,101 @@ def layer_badge(layer: str) -> str:
     return f'<span class="lab-badge" style="background:{color}">{layer}</span>'
 
 
+def find_user(dataset: dict[str, Any], user_id: str) -> dict[str, Any]:
+    for user in dataset.get("users", []):
+        if user.get("user_id") == user_id:
+            return user
+    raise KeyError(user_id)
+
+
+def find_session(user: dict[str, Any], thread_id: str) -> dict[str, Any] | None:
+    for session in user.get("sessions", []):
+        if session.get("thread_id") == thread_id:
+            return session
+    return None
+
+
 def retrieve_for_case(
     memory: StudentMemory,
     case: dict[str, Any],
     extra_messages: list[dict[str, str]],
 ) -> dict[str, Any]:
-    """BONUS TODO: run student retrieval for the loaded case.
+    """BONUS TODO: run student retrieval for the loaded case."""
+    dataset = load_dataset()
+    user_id = case.get("user_id", "")
+    thread_id = case.get("thread_id", "")
+    query = case.get("query", "")
+    layer = case.get("expected_layer", "")
 
-    Return a dict with keys:
-      - "merged_context": str  (StudentMemory.assemble_context output)
-      - "layers": dict[str, str]  (per-layer evidence: short_term/long_term/
-                                   episodic/semantic)
-      - "budget": dict  (the breakdown from assemble_context)
+    layers = {
+        "short_term": "",
+        "long_term": "",
+        "episodic": "",
+        "semantic": "",
+    }
 
-    Hints:
-      * Build short_term from case["fixture_messages"] if present, else from
-        the matching user/thread messages in data/sessions.json, plus
-        extra_messages. E01 has no fixture — it uses thread minh-s1.
-      * Decide which durable layers to fetch from case["expected_layer"] (or
-        case["retrieve_layers"] for "mixed"), then call
-        memory.retrieve_long_term / retrieve_episodic / retrieve_semantic.
-      * Keep user_id and thread_id from the loaded case.
-      * Finish with memory.assemble_context(layers).
-    """
-    _ = (memory, case, extra_messages, settings, ShortTermMemory)
-    raise NotImplementedError("BONUS TODO: run student retrieval for the loaded case")
+    # Short-term messages
+    stm = ShortTermMemory(strategy="sliding", max_recent_messages=6, pressure_tokens=450)
+    messages = case.get("fixture_messages")
+    if not messages and user_id:
+        try:
+            user = find_user(dataset, user_id)
+            session = find_session(user, thread_id)
+            messages = (session or {}).get("messages", [])
+        except Exception:
+            messages = []
+    for msg in (messages or []):
+        stm.add(msg.get("role", "user"), msg.get("content", ""))
+    for msg in (extra_messages or []):
+        stm.add(msg.get("role", "user"), msg.get("content", ""))
+
+    if layer == "short_term" or "short_term" in case.get("retrieve_layers", []):
+        layers["short_term"] = stm.render()
+
+    if layer == "long_term" or "long_term" in case.get("retrieve_layers", []):
+        try:
+            layers["long_term"] = memory.retrieve_long_term(user_id=user_id, thread_id=thread_id, query=query)
+        except Exception as e:
+            layers["long_term"] = f"(error: {e})"
+
+    if layer == "episodic" or "episodic" in case.get("retrieve_layers", []):
+        try:
+            layers["episodic"] = memory.retrieve_episodic(user_id=user_id, query=query)
+        except Exception as e:
+            layers["episodic"] = f"(error: {e})"
+
+    if layer == "semantic" or "semantic" in case.get("retrieve_layers", []):
+        try:
+            layers["semantic"] = memory.retrieve_semantic(graph_id=settings.semantic_graph_id, query=query)
+        except Exception as e:
+            layers["semantic"] = f"(error: {e})"
+
+    if layer == "mixed":
+        wanted = case.get("retrieve_layers") or ["long_term", "semantic"]
+        if "short_term" in wanted:
+            layers["short_term"] = stm.render()
+        if "long_term" in wanted:
+            try:
+                layers["long_term"] = memory.retrieve_long_term(user_id=user_id, thread_id=thread_id, query=query)
+            except Exception as e:
+                layers["long_term"] = f"(error: {e})"
+        if "episodic" in wanted:
+            try:
+                layers["episodic"] = memory.retrieve_episodic(user_id=user_id, query=query)
+            except Exception as e:
+                layers["episodic"] = f"(error: {e})"
+        if "semantic" in wanted:
+            try:
+                layers["semantic"] = memory.retrieve_semantic(graph_id=settings.semantic_graph_id, query=query)
+            except Exception as e:
+                layers["semantic"] = f"(error: {e})"
+
+    merged_context, budget = memory.assemble_context(layers)
+    return {
+        "merged_context": merged_context,
+        "layers": layers,
+        "budget": budget,
+    }
 
 
 def main() -> None:

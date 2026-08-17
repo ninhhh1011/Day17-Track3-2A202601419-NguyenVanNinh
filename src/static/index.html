@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab 17 — Multi-Memory Agent System | Zep Cloud V3</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #121617;
+            --bg-secondary: #1a2224;
+            --bg-card: rgba(28, 38, 41, 0.85);
+            --bg-card-hover: rgba(36, 49, 53, 0.95);
+            --bg-glass: rgba(255, 255, 255, 0.04);
+            
+            --charcoal: #2D2820;
+            --deep-slate: #24383C;
+            --heritage-gold: #C5A059;
+            --gold-bright: #E6C687;
+            --soft-gold: #F6D99B;
+            --warm-taupe: #9E9589;
+            --earthy-brown: #6F5830;
+            
+            --text-primary: #F7F5F0;
+            --text-secondary: #C2BCB2;
+            --text-muted: #8E877D;
+            
+            --border-subtle: rgba(197, 160, 89, 0.22);
+            --border-highlight: rgba(197, 160, 89, 0.55);
+            
+            --layer-stm: #3B82F6;
+            --layer-ltm: #10B981;
+            --layer-epi: #F59E0B;
+            --layer-sem: #8B5CF6;
+            --layer-mix: #EC4899;
+            
+            --status-pass: #10B981;
+            --status-fail: #EF4444;
+            
+            --font-serif: 'Cinzel', Georgia, serif;
+            --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            
+            --radius-sm: 8px;
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --shadow-glow: 0 8px 32px rgba(0, 0, 0, 0.37), 0 0 20px rgba(197, 160, 89, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            background-image: 
+                radial-gradient(circle at 15% 10%, rgba(197, 160, 89, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 85% 80%, rgba(36, 56, 60, 0.25) 0%, transparent 50%),
+                linear-gradient(180deg, #121617 0%, #171E20 100%);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            line-height: 1.6;
+            padding: 24px;
+        }
+
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        /* HEADER */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 28px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            backdrop-filter: blur(16px);
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .brand-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--heritage-gold), var(--earthy-brown));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(197, 160, 89, 0.3);
+        }
+
+        .brand-title {
+            font-family: var(--font-serif);
+            font-size: 1.35rem;
+            letter-spacing: 0.06em;
+            color: var(--gold-bright);
+            text-transform: uppercase;
+        }
+
+        .brand-subtitle {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            letter-spacing: 0.02em;
+        }
+
+        .header-badges {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .dot-green { background: #10B981; box-shadow: 0 0 8px #10B981; }
+        .dot-amber { background: #F59E0B; box-shadow: 0 0 8px #F59E0B; }
+
+        /* NAVIGATION TABS */
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border-subtle);
+            padding-bottom: 12px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            padding: 10px 20px;
+            font-family: var(--font-sans);
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            color: var(--gold-bright);
+            background: rgba(197, 160, 89, 0.08);
+        }
+
+        .tab-btn.active {
+            color: var(--gold-bright);
+            background: rgba(197, 160, 89, 0.15);
+            border-color: var(--border-highlight);
+            box-shadow: 0 4px 16px rgba(197, 160, 89, 0.15);
+        }
+
+        /* MAIN GRID */
+        .layout-grid {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 1024px) {
+            .layout-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* SIDEBAR CASES */
+        .sidebar-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            backdrop-filter: blur(12px);
+            height: calc(100vh - 220px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .sidebar-title {
+            font-family: var(--font-serif);
+            font-size: 1.05rem;
+            color: var(--gold-bright);
+            letter-spacing: 0.04em;
+        }
+
+        .cases-list {
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-right: 4px;
+            flex: 1;
+        }
+
+        .cases-list::-webkit-scrollbar {
+            width: 5px;
+        }
+        .cases-list::-webkit-scrollbar-thumb {
+            background: var(--border-subtle);
+            border-radius: 4px;
+        }
+
+        .case-item {
+            padding: 12px 14px;
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .case-item:hover {
+            background: rgba(197, 160, 89, 0.09);
+            border-color: var(--border-subtle);
+            transform: translateX(3px);
+        }
+
+        .case-item.active {
+            background: rgba(197, 160, 89, 0.18);
+            border-color: var(--heritage-gold);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+        }
+
+        .case-item-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .case-id {
+            font-weight: 700;
+            font-size: 0.88rem;
+            color: var(--text-primary);
+        }
+
+        .case-user {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .case-desc {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* LAYER BADGES */
+        .layer-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-short_term { background: rgba(59, 130, 246, 0.2); color: #93C5FD; border: 1px solid rgba(59, 130, 246, 0.4); }
+        .badge-long_term { background: rgba(16, 185, 129, 0.2); color: #6EE7B7; border: 1px solid rgba(16, 185, 129, 0.4); }
+        .badge-episodic { background: rgba(245, 158, 11, 0.2); color: #FCD34D; border: 1px solid rgba(245, 158, 11, 0.4); }
+        .badge-semantic { background: rgba(139, 92, 246, 0.2); color: #C4B5FD; border: 1px solid rgba(139, 92, 246, 0.4); }
+        .badge-mixed { background: rgba(236, 72, 153, 0.2); color: #F472B6; border: 1px solid rgba(236, 72, 153, 0.4); }
+
+        /* CONTENT WORKSPACE */
+        .workspace {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            backdrop-filter: blur(12px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        .card-title {
+            font-family: var(--font-serif);
+            font-size: 1.15rem;
+            color: var(--gold-bright);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .query-box {
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            padding: 16px 20px;
+            margin-bottom: 16px;
+        }
+
+        .query-text {
+            font-size: 1.05rem;
+            color: #FFFFFF;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .query-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--heritage-gold), var(--earthy-brown));
+            color: #121617;
+            font-family: var(--font-sans);
+            font-weight: 700;
+            font-size: 0.92rem;
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 16px rgba(197, 160, 89, 0.25);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            filter: brightness(1.15);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(197, 160, 89, 0.4);
+        }
+
+        /* TOKEN BUDGET METRICS */
+        .budget-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .budget-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .budget-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: var(--radius-sm);
+            padding: 14px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .budget-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .budget-val {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .budget-limit {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        .budget-bar {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .budget-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.4s ease;
+        }
+
+        /* EVIDENCE CARDS */
+        .evidence-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .evidence-grid { grid-template-columns: 1fr; }
+        }
+
+        .evidence-box {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            height: 240px;
+        }
+
+        .evidence-box-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .evidence-content {
+            flex: 1;
+            overflow-y: auto;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            white-space: pre-wrap;
+            line-height: 1.5;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .evidence-content::-webkit-scrollbar {
+            width: 4px;
+        }
+        .evidence-content::-webkit-scrollbar-thumb {
+            background: var(--border-subtle);
+        }
+
+        /* CHAT PLAYGROUND */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 480px;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .msg-bubble {
+            max-width: 80%;
+            padding: 12px 18px;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .msg-user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, rgba(197, 160, 89, 0.25), rgba(111, 88, 48, 0.35));
+            border: 1px solid var(--border-highlight);
+            color: #FFFFFF;
+            border-bottom-right-radius: 4px;
+        }
+
+        .msg-bot {
+            align-self: flex-start;
+            background: rgba(36, 56, 60, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            border-bottom-left-radius: 4px;
+        }
+
+        .chat-input-row {
+            display: flex;
+            padding: 14px 18px;
+            background: rgba(28, 38, 41, 0.95);
+            border-top: 1px solid var(--border-subtle);
+            gap: 12px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            color: #FFFFFF;
+            padding: 10px 16px;
+            font-family: var(--font-sans);
+            font-size: 0.92rem;
+            outline: none;
+        }
+
+        .chat-input:focus {
+            border-color: var(--heritage-gold);
+            box-shadow: 0 0 10px rgba(197, 160, 89, 0.2);
+        }
+
+        .gt-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .gt-pass {
+            background: rgba(16, 185, 129, 0.2);
+            color: #6EE7B7;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+        }
+
+        .gt-fail {
+            background: rgba(239, 68, 68, 0.2);
+            color: #FCA5A5;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+        }
+
+        .tab-pane {
+            display: none;
+        }
+        .tab-pane.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- HEADER -->
+    <header>
+        <div class="brand">
+            <div class="brand-icon">🏛️</div>
+            <div>
+                <h1 class="brand-title">Viet Heritage AI — Memory Agent</h1>
+                <div class="brand-subtitle">Lab 17 Multi-Layer Memory Architecture &bull; Zep Cloud V3 &bull; Context Engineering</div>
+            </div>
+        </div>
+        <div class="header-badges">
+            <div class="status-pill" id="zep-status">
+                <span class="status-dot dot-green"></span>
+                <span>Zep V3: Active</span>
+            </div>
+            <div class="status-pill" id="gemini-status">
+                <span class="status-dot dot-green"></span>
+                <span>Gemini LLM: Ready</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- NAVIGATION TABS -->
+    <div class="nav-tabs">
+        <button class="tab-btn active" onclick="switchTab('explorer')">
+            <span>🔎</span> Test Cases & Evidence Matrix
+        </button>
+        <button class="tab-btn" onclick="switchTab('chat')">
+            <span>💬</span> Interactive Chat Playground
+        </button>
+        <button class="tab-btn" onclick="switchTab('privacy')">
+            <span>🛡️</span> Privacy & Governance Drill
+        </button>
+        <button class="tab-btn" onclick="switchTab('architecture')">
+            <span>🏛️</span> 4-Layer Memory Architecture
+        </button>
+    </div>
+
+    <!-- TAB 1: EXPLORER -->
+    <div id="pane-explorer" class="tab-pane active">
+        <div class="layout-grid">
+            <!-- SIDEBAR -->
+            <div class="sidebar-card">
+                <div class="sidebar-header">
+                    <span class="sidebar-title">Evaluation Cases</span>
+                    <span class="status-pill" id="case-count">11 Cases</span>
+                </div>
+                <div class="cases-list" id="cases-container">
+                    <!-- Dynamic case list -->
+                </div>
+            </div>
+
+            <!-- WORKSPACE -->
+            <div class="workspace">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <span id="cur-layer-badge"></span>
+                            <span id="cur-case-id">E01</span> — Case Evaluation Inspector
+                        </div>
+                        <div id="cur-gt-status"></div>
+                    </div>
+
+                    <div class="query-box">
+                        <div class="query-text" id="cur-query">Loading query...</div>
+                        <div class="query-meta">
+                            <span><b>User ID:</b> <span id="cur-user">-</span></span>
+                            <span><b>Thread ID:</b> <span id="cur-thread">-</span></span>
+                            <span><b>Expected:</b> <span id="cur-layer-name">-</span></span>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                        <button class="btn-primary" id="btn-run-retrieve" onclick="runRetrieval()">
+                            <span>⚡</span> Run Student Memory Retrieval
+                        </button>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">
+                            Ground truth criteria: <b id="cur-gt-tokens" style="color: var(--soft-gold);">-</b>
+                        </div>
+                    </div>
+
+                    <!-- TOKEN BUDGET METRICS -->
+                    <div class="budget-grid">
+                        <div class="budget-item">
+                            <div class="budget-label">Short-term (10%)</div>
+                            <div class="budget-val" id="tok-stm">0 tok</div>
+                            <div class="budget-limit" id="limit-stm">limit 100</div>
+                            <div class="budget-bar"><div class="budget-fill" id="fill-stm" style="background:var(--layer-stm); width:0%"></div></div>
+                        </div>
+                        <div class="budget-item">
+                            <div class="budget-label">Long-term (4%)</div>
+                            <div class="budget-val" id="tok-ltm">0 tok</div>
+                            <div class="budget-limit" id="limit-ltm">limit 40</div>
+                            <div class="budget-bar"><div class="budget-fill" id="fill-ltm" style="background:var(--layer-ltm); width:0%"></div></div>
+                        </div>
+                        <div class="budget-item">
+                            <div class="budget-label">Episodic (3%)</div>
+                            <div class="budget-val" id="tok-epi">0 tok</div>
+                            <div class="budget-limit" id="limit-epi">limit 30</div>
+                            <div class="budget-bar"><div class="budget-fill" id="fill-epi" style="background:var(--layer-epi); width:0%"></div></div>
+                        </div>
+                        <div class="budget-item">
+                            <div class="budget-label">Semantic (3%)</div>
+                            <div class="budget-val" id="tok-sem">0 tok</div>
+                            <div class="budget-limit" id="limit-sem">limit 30</div>
+                            <div class="budget-bar"><div class="budget-fill" id="fill-sem" style="background:var(--layer-sem); width:0%"></div></div>
+                        </div>
+                    </div>
+
+                    <!-- 4-LAYER EVIDENCE -->
+                    <div class="evidence-grid">
+                        <div class="evidence-box">
+                            <div class="evidence-box-header">
+                                <span class="layer-badge badge-short_term">Short-Term Memory</span>
+                                <span style="font-size:0.75rem; color:var(--text-muted);">Sliding Window + Compaction</span>
+                            </div>
+                            <div class="evidence-content" id="ev-stm">(Chưa chạy retrieval)</div>
+                        </div>
+                        <div class="evidence-box">
+                            <div class="evidence-box-header">
+                                <span class="layer-badge badge-long_term">Long-Term Context Block</span>
+                                <span style="font-size:0.75rem; color:var(--text-muted);">Zep User Graph</span>
+                            </div>
+                            <div class="evidence-content" id="ev-ltm">(Chưa chạy retrieval)</div>
+                        </div>
+                        <div class="evidence-box">
+                            <div class="evidence-box-header">
+                                <span class="layer-badge badge-episodic">Episodic Trajectories</span>
+                                <span style="font-size:0.75rem; color:var(--text-muted);">Trajectory & Reflection</span>
+                            </div>
+                            <div class="evidence-content" id="ev-epi">(Chưa chạy retrieval)</div>
+                        </div>
+                        <div class="evidence-box">
+                            <div class="evidence-box-header">
+                                <span class="layer-badge badge-semantic">Semantic Knowledge</span>
+                                <span style="font-size:0.75rem; color:var(--text-muted);">Standalone Graph (Shared)</span>
+                            </div>
+                            <div class="evidence-content" id="ev-sem">(Chưa chạy retrieval)</div>
+                        </div>
+                    </div>
+
+                    <!-- MERGED CONTEXT -->
+                    <div class="card" style="background: rgba(0,0,0,0.4); border-color: var(--border-subtle); padding: 16px;">
+                        <div style="font-weight:700; font-size:0.88rem; color:var(--gold-bright); margin-bottom:8px;">
+                            📋 Final Merged Context (Assembled via ContextBudgetManager Priority)
+                        </div>
+                        <div class="evidence-content" id="ev-merged" style="max-height: 160px;">(Chưa chạy retrieval)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: CHAT PLAYGROUND -->
+    <div id="pane-chat" class="tab-pane">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span>💬</span> Live Interactive Memory Chat Playground
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-muted);">
+                    Current Context: <b id="chat-user-label" style="color: var(--gold-bright);">minh-lab17</b> &bull; Thread: <b id="chat-thread-label">minh-s1</b>
+                </div>
+            </div>
+            <div class="chat-container">
+                <div class="chat-messages" id="chat-box">
+                    <div class="msg-bubble msg-bot">
+                        Xin chào! Tôi là AI Memory Agent cho Lab 17. Tôi đã được đồng bộ với bộ nhớ 4 tầng (Zep Cloud V3 + Short-term Sliding Compaction). Hãy đặt câu hỏi để kiểm chứng trí nhớ của tôi!
+                    </div>
+                </div>
+                <div class="chat-input-row">
+                    <input type="text" id="chat-input-field" class="chat-input" placeholder="Nhập câu hỏi tiếp theo (ví dụ: 'Dự án ORCHID-27 dùng ngôn ngữ gì?' hoặc 'Lần trước ta đã fix lỗi timeout thế nào?')..." onkeydown="if(event.key==='Enter') sendChatMessage()">
+                    <button class="btn-primary" onclick="sendChatMessage()">Gửi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 3: PRIVACY DRILL -->
+    <div id="pane-privacy" class="tab-pane">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span>🛡️</span> Privacy-by-Design & Right-to-be-Forgotten Drill
+                </div>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 0.95rem;">
+                Tuân thủ quy định bảo mật GDPR / CCPA và chính sách Right-to-be-Forgotten: Khi người dùng yêu cầu xóa tài khoản, toàn bộ User Graph trên Zep Cloud và các khóa đệm Redis phải được giải phóng hoàn toàn mà không ảnh hưởng đến Shared Semantic Graph.
+            </p>
+            <div style="display:flex; gap:16px; margin-bottom: 24px;">
+                <button class="btn-primary" style="background: linear-gradient(135deg, #EF4444, #991B1B); color:#fff;" onclick="triggerForget('minh-lab17')">
+                    🗑️ Xóa User minh-lab17 (Forget User)
+                </button>
+                <button class="btn-primary" onclick="verifyForget('minh-lab17')">
+                    🔍 Kiểm tra Verify-Only
+                </button>
+            </div>
+            <div class="card" style="background: rgba(0,0,0,0.5);">
+                <div style="font-weight:700; color:var(--gold-bright); margin-bottom:8px;">Execution Logs:</div>
+                <div class="evidence-content" id="privacy-logs" style="height: 180px;">Sẵn sàng chạy kiểm tra Privacy Drill...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 4: ARCHITECTURE -->
+    <div id="pane-architecture" class="tab-pane">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span>🏛️</span> Kiến Trúc 4 Tầng Bộ Nhớ (Multi-Layer Memory Architecture)
+                </div>
+            </div>
+            <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                <div class="card" style="background: rgba(255,255,255,0.02);">
+                    <h3 style="color: var(--layer-stm); margin-bottom:8px;">1. Short-Term / Working Memory</h3>
+                    <p style="font-size:0.88rem; color:var(--text-secondary);">
+                        Lưu trữ cục bộ phiên làm việc hiện tại bằng kỹ thuật <b>Sliding Window</b> kết hợp <b>Compaction</b>. Nén các lượt hội thoại cũ thành state/TODO/constraints, giữ nguyên các deadline quan trọng (như <code>REVIEW-DEADLINE-1600</code>).
+                    </p>
+                </div>
+                <div class="card" style="background: rgba(255,255,255,0.02);">
+                    <h3 style="color: var(--layer-ltm); margin-bottom:8px;">2. Long-Term / Declarative Memory</h3>
+                    <p style="font-size:0.88rem; color:var(--text-secondary);">
+                        Managed trên <b>Zep User Graph</b>. Sử dụng <code>Context Block</code> tự động tổng hợp facts, preferences và giải quyết xung đột <b>Recency</b> (ưu tiên thông tin mới nhất khi user thay đổi stack công nghệ).
+                    </p>
+                </div>
+                <div class="card" style="background: rgba(255,255,255,0.02);">
+                    <h3 style="color: var(--layer-epi); margin-bottom:8px;">3. Episodic Memory</h3>
+                    <p style="font-size:0.88rem; color:var(--text-secondary);">
+                        Tìm kiếm <code>scope="episodes"</code> trên User Graph để truy hồi lộ trình giải quyết vấn đề trong quá khứ (lỗi async timeout, bài học kinh nghiệm, provenance).
+                    </p>
+                </div>
+                <div class="card" style="background: rgba(255,255,255,0.02);">
+                    <h3 style="color: var(--layer-sem); margin-bottom:8px;">4. Semantic Memory</h3>
+                    <p style="font-size:0.88rem; color:var(--text-secondary);">
+                        Standalone Knowledge Graph dùng chung cho mọi user. Lưu trữ tri thức domain (Payment API retry policy, Connection pooling guidelines) với literal markers bảo toàn nguyên vẹn.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let casesData = [];
+    let currentCase = null;
+    let chatHistory = [];
+
+    async function init() {
+        try {
+            const res = await fetch('/api/cases');
+            casesData = await res.json();
+            renderCasesList();
+            if (casesData.length > 0) {
+                selectCase(casesData[0].id);
+            }
+        } catch (e) {
+            console.error("Failed to load cases", e);
+        }
+    }
+
+    function renderCasesList() {
+        const container = document.getElementById('cases-container');
+        container.innerHTML = '';
+        casesData.forEach(c => {
+            const div = document.createElement('div');
+            div.className = 'case-item' + (currentCase && currentCase.id === c.id ? ' active' : '');
+            div.onclick = () => selectCase(c.id);
+            div.innerHTML = `
+                <div class="case-item-top">
+                    <span class="case-id">${c.id}</span>
+                    <span class="layer-badge badge-${c.expected_layer}">${c.expected_layer}</span>
+                </div>
+                <div class="case-desc">${c.query || c.description || ''}</div>
+            `;
+            container.appendChild(div);
+        });
+        document.getElementById('case-count').innerText = `${casesData.length} Cases`;
+    }
+
+    function selectCase(id) {
+        currentCase = casesData.find(c => c.id === id);
+        if (!currentCase) return;
+
+        renderCasesList();
+
+        document.getElementById('cur-case-id').innerText = currentCase.id;
+        document.getElementById('cur-query').innerText = currentCase.query;
+        document.getElementById('cur-user').innerText = currentCase.user_id || 'minh-lab17';
+        document.getElementById('cur-thread').innerText = currentCase.thread_id || 'minh-s1';
+        document.getElementById('cur-layer-name').innerText = currentCase.expected_layer;
+
+        const badge = document.getElementById('cur-layer-badge');
+        badge.className = `layer-badge badge-${currentCase.expected_layer}`;
+        badge.innerText = currentCase.expected_layer;
+
+        const gtTokens = (currentCase.must_contain_all || []).map(t => `"${t}"`).join(', ');
+        document.getElementById('cur-gt-tokens').innerText = gtTokens || 'None';
+        document.getElementById('cur-gt-status').innerHTML = '';
+
+        document.getElementById('chat-user-label').innerText = currentCase.user_id || 'minh-lab17';
+        document.getElementById('chat-thread-label').innerText = currentCase.thread_id || 'minh-s1';
+
+        // Reset display
+        ['ev-stm', 'ev-ltm', 'ev-epi', 'ev-sem', 'ev-merged'].forEach(id => {
+            document.getElementById(id).innerText = '(Nhấn "Run Student Memory Retrieval" để thực thi)';
+        });
+    }
+
+    async function runRetrieval() {
+        if (!currentCase) return;
+        const btn = document.getElementById('btn-run-retrieve');
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳</span> Retrieving Memory...';
+
+        try {
+            const res = await fetch('/api/retrieve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    case_id: currentCase.id,
+                    query: currentCase.query,
+                    user_id: currentCase.user_id,
+                    thread_id: currentCase.thread_id,
+                    expected_layer: currentCase.expected_layer
+                })
+            });
+            const data = await res.json();
+
+            // Populate Evidence
+            document.getElementById('ev-stm').innerText = data.layers?.short_term || '(Rỗng)';
+            document.getElementById('ev-ltm').innerText = data.layers?.long_term || '(Rỗng)';
+            document.getElementById('ev-epi').innerText = data.layers?.episodic || '(Rỗng)';
+            document.getElementById('ev-sem').innerText = data.layers?.semantic || '(Rỗng)';
+            document.getElementById('ev-merged').innerText = data.merged_context || '(Rỗng)';
+
+            // Populate Budget
+            const b = data.budget || {};
+            updateBudget('stm', b.short_term);
+            updateBudget('ltm', b.long_term);
+            updateBudget('epi', b.episodic);
+            updateBudget('sem', b.semantic);
+
+            // Ground Truth verification
+            const passed = data.passed;
+            const statusBox = document.getElementById('cur-gt-status');
+            if (passed) {
+                statusBox.innerHTML = '<span class="gt-badge gt-pass">✓ GROUND TRUTH PASS</span>';
+            } else {
+                statusBox.innerHTML = '<span class="gt-badge gt-fail">✗ GROUND TRUTH MISSING</span>';
+            }
+        } catch (e) {
+            console.error("Retrieval error:", e);
+            alert("Lỗi khi chạy retrieval: " + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<span>⚡</span> Run Student Memory Retrieval';
+        }
+    }
+
+    function updateBudget(key, info) {
+        if (!info) return;
+        document.getElementById(`tok-${key}`).innerText = `${info.used_tokens} tok`;
+        document.getElementById(`limit-${key}`).innerText = `limit ${info.limit_tokens} (raw ${info.raw_tokens})`;
+        const pct = Math.min(100, Math.round((info.used_tokens / (info.limit_tokens || 1)) * 100));
+        document.getElementById(`fill-${key}`).style.width = `${pct}%`;
+    }
+
+    async function sendChatMessage() {
+        const input = document.getElementById('chat-input-field');
+        const text = input.value.trim();
+        if (!text) return;
+
+        const chatBox = document.getElementById('chat-box');
+        
+        // Add User Message
+        const userDiv = document.createElement('div');
+        userDiv.className = 'msg-bubble msg-user';
+        userDiv.innerText = text;
+        chatBox.appendChild(userDiv);
+        input.value = '';
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        chatHistory.push({ role: 'user', content: text });
+
+        // Add Bot typing
+        const botDiv = document.createElement('div');
+        botDiv.className = 'msg-bubble msg-bot';
+        botDiv.innerText = 'Đang tra cứu bộ nhớ và tạo phản hồi...';
+        chatBox.appendChild(botDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        try {
+            const res = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_message: text,
+                    user_id: currentCase ? currentCase.user_id : 'minh-lab17',
+                    thread_id: currentCase ? currentCase.thread_id : 'minh-s1',
+                    history: chatHistory
+                })
+            });
+            const data = await res.json();
+            botDiv.innerText = data.reply;
+            chatHistory.push({ role: 'model', content: data.reply });
+        } catch (e) {
+            botDiv.innerText = 'Lỗi phản hồi: ' + e.message;
+        }
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    async function triggerForget(userId) {
+        const logs = document.getElementById('privacy-logs');
+        logs.innerText = `Đang xóa user ${userId} trên Zep Cloud và Redis...`;
+        try {
+            const res = await fetch(`/api/forget?user_id=${userId}`, { method: 'POST' });
+            const data = await res.json();
+            logs.innerText = JSON.stringify(data, null, 2);
+        } catch (e) {
+            logs.innerText = "Lỗi khi forget user: " + e.message;
+        }
+    }
+
+    async function verifyForget(userId) {
+        const logs = document.getElementById('privacy-logs');
+        logs.innerText = `Đang kiểm tra xác thực xóa user ${userId}...`;
+        try {
+            const res = await fetch(`/api/verify_forget?user_id=${userId}`);
+            const data = await res.json();
+            logs.innerText = JSON.stringify(data, null, 2);
+        } catch (e) {
+            logs.innerText = "Lỗi khi verify forget: " + e.message;
+        }
+    }
+
+    function switchTab(name) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+        
+        event.currentTarget.classList.add('active');
+        document.getElementById(`pane-${name}`).classList.add('active');
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>

@@ -60,6 +60,9 @@ golden:
 ui:
 	docker compose run --rm --service-ports -e PYTHONPATH=/workspace app streamlit run src/demo_ui.py --server.address 0.0.0.0 --server.port 8501
 
+web:
+	docker compose run --rm --service-ports -p 8000:8000 -e PYTHONPATH=/workspace app python -m src.web_app
+
 # Build colorful HTML reports from every reports/*benchmark*.json (+ run log if present).
 report:
 	docker compose run --rm app python -m src.report_html --all --log reports/run.log

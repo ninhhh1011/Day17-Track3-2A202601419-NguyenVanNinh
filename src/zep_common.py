@@ -15,7 +15,7 @@ from .utils import join_nonempty, object_to_text
 def get_zep_client() -> Zep:
     if not settings.zep_api_key:
         raise RuntimeError("ZEP_API_KEY is missing. Copy .env.example to .env and add the key.")
-    return Zep(api_key=settings.zep_api_key)
+    return Zep(api_key=settings.zep_api_key, timeout=120.0)
 
 
 def safe_call(fn, *args, **kwargs):
@@ -40,7 +40,10 @@ def ensure_user(client: Zep, user: dict[str, Any], reset: bool = False) -> None:
 
 def recreate_thread(client: Zep, thread_id: str, user_id: str) -> None:
     safe_call(client.thread.delete, thread_id=thread_id)
-    client.thread.create(thread_id=thread_id, user_id=user_id)
+    try:
+        client.thread.create(thread_id=thread_id, user_id=user_id)
+    except Exception:
+        pass
 
 
 def add_messages(client: Zep, thread_id: str, raw_messages: list[dict[str, Any]]) -> None:
